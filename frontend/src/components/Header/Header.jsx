@@ -26,16 +26,16 @@ export default function Header() {
     <header className="flex-shrink-0 bg-surface border-b border-border" style={{ height: 52 }}>
       <div className="flex items-center h-full px-4 gap-0">
 
-        {/* Logo */}
-        <div className="flex items-center gap-2 pr-6 border-r border-border mr-4">
+        {/* Logo — clicks to landing page */}
+        <a href="/" className="flex items-center gap-2 pr-6 border-r border-border mr-4 no-underline cursor-pointer">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/20 to-purple/20 border border-accent/30 flex items-center justify-center">
             <Activity size={14} className="text-accent" />
           </div>
           <div>
-            <div className="font-display font-700 text-sm text-white tracking-tight leading-none">MobilityIQ</div>
+            <div className="font-display font-700 text-sm text-white tracking-tight leading-none">MobilityAI</div>
             <div className="font-mono text-[8px] text-muted tracking-widest leading-none mt-0.5">DEMAND FORECAST</div>
           </div>
-        </div>
+        </a>
 
         {/* City selector */}
         <div className="relative mr-4 pr-4 border-r border-border">
@@ -48,7 +48,7 @@ export default function Header() {
             <ChevronDown size={11} className="text-muted" />
           </button>
           {cityMenuOpen && (
-            <div className="absolute top-full left-0 mt-1 w-56 bg-card2 border border-border rounded-xl shadow-2xl z-50 py-1 max-h-72 overflow-y-auto">
+            <div className="absolute top-full left-0 mt-1 w-56 bg-card2 border border-border rounded-xl shadow-2xl z-[1000] py-1 max-h-72 overflow-y-auto">
               {[1, 2].map(tier => (
                 <div key={tier}>
                   <div className="px-3 py-1.5 text-[9px] font-mono text-muted tracking-widest uppercase border-b border-border">

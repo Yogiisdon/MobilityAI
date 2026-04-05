@@ -11,7 +11,7 @@
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 13px;
     -webkit-font-smoothing: antialiased;
-    overflow: hidden;
+    overflow: auto;
   }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -27,28 +27,25 @@
     filter: brightness(.28) saturate(.25) hue-rotate(190deg);
   }
 
-  /* ✅ FIXED POPUP */
+  /* Popup */
   .leaflet-popup-content-wrapper {
     background: #141928 !important;
     border: 1px solid #1e2540 !important;
     border-radius: 10px !important;
     box-shadow: 0 8px 32px rgba(0,0,0,.7) !important;
     padding: 0 !important;
-
-    max-width: 200px !important; /* 🔑 prevents expansion */
+    max-width: 200px !important;
   }
 
   .leaflet-popup-content {
     margin: 0 !important;
     padding: 10px !important;
-
-    max-width: 180px;           /* 🔑 constrain inner content */
-    white-space: normal;        /* 🔑 allow wrapping */
-    word-break: break-word;     /* 🔑 prevent overflow */
-    overflow: hidden;           /* 🔑 clip excess */
+    max-width: 180px;
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
   }
 
-  /* 🔑 critical fix for flex overflow inside popup */
   .leaflet-popup-content * {
     min-width: 0;
   }
@@ -150,4 +147,12 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ===== FORCE Leaflet controls below dropdowns — outside @layer to win specificity ===== */
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control-container,
+.leaflet-control {
+  z-index: 500 !important;
 }

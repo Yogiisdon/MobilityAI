@@ -25,15 +25,13 @@ const PAGE_MAP = {
 export default function App() {
   const { activeTab, tick, isLive } = useStore()
 
-  // Simulation ticker
   useEffect(() => {
     const id = setInterval(() => {
       if (isLive) tick()
-    }, 2200)
+    }, 5000)
     return () => clearInterval(id)
   }, [isLive])
 
-  // ✅ Show Landing Page
   if (activeTab === "landing") {
     return <LandingPage />
   }
@@ -45,7 +43,7 @@ export default function App() {
       <Header />
       <Toolbar />
 
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-auto relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -53,7 +51,7 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="flex flex-1 overflow-hidden"
+            className="flex flex-1 overflow-auto"
           >
             <Page />
           </motion.div>

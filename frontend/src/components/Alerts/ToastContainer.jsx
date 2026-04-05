@@ -13,7 +13,7 @@ export default function ToastContainer() {
   const { activeToasts, dismissToast } = useStore()
 
   return (
-    <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none" style={{ minWidth: 320 }}>
+    <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-2 pointer-events-none" style={{ minWidth: 320 }}>
       <AnimatePresence>
         {activeToasts.map(t => {
           const cfg = ICONS[t.type] || ICONS.warn

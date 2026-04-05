@@ -9,10 +9,11 @@ delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl: '', shadowUrl: '' })
 
 export default function MapView() {
-  const mapRef      = useRef(null)
-  const mapInstance = useRef(null)
-  const circlesRef  = useRef({})
-  const rootsRef    = useRef({})
+  const mapRef       = useRef(null)
+  const mapInstance  = useRef(null)
+  const circlesRef   = useRef({})
+  const rootsRef     = useRef({})
+  const popupDataRef = useRef({}) // ✅ track latest data per zone
 
   const {
     activeCity, zones, demandData, prevDemand, history,
@@ -24,7 +25,7 @@ export default function MapView() {
     if (mapInstance.current) return
     const map = L.map(mapRef.current, {
       center: [activeCity.lat, activeCity.lon],
-      zoom:   activeCity.zoom,
+      zoom: activeCity.zoom,
       zoomControl: true,
       attributionControl: false,
     })
@@ -39,11 +40,11 @@ export default function MapView() {
   useEffect(() => {
     if (!mapInstance.current) return
     mapInstance.current.setView([activeCity.lat, activeCity.lon], activeCity.zoom, { animate: true, duration: 0.8 })
-    // Remove old circles
     Object.values(circlesRef.current).forEach(c => c.remove())
     circlesRef.current = {}
     Object.values(rootsRef.current).forEach(r => { try { r.unmount() } catch {} })
     rootsRef.current = {}
+    popupDataRef.current = {}
   }, [activeCity.id])
 
   // Build / update circles
@@ -53,11 +54,14 @@ export default function MapView() {
     const maxD = getMaxDemand()
 
     zones.forEach(zone => {
-      const d    = demandData[zone.id] || 0
-      const norm = d / maxD
-      const rgb  = demandColor(norm)
-      const col  = rgbStr(rgb)
+      const d      = demandData[zone.id] || 0
+      const norm   = maxD > 0 ? d / maxD : 0
+      const rgb    = demandColor(norm)
+      const col    = rgbStr(rgb)
       const radius = 400 + norm * 700
+
+      // ✅ Always keep latest data in ref so popup click reads fresh values
+      popupDataRef.current[zone.id] = { d, norm, rgb, col }
 
       if (!circlesRef.current[zone.id]) {
         const circle = L.circle([zone.lat, zone.lon], {
@@ -70,30 +74,52 @@ export default function MapView() {
         circle.on('click', () => {
           setSelectedZone(zone.id)
           map.panTo([zone.lat, zone.lon], { animate: true, duration: 0.5 })
-        })
 
-        // Custom popup with React
-        circle.on('click', () => {
+          // ✅ Read latest data from ref at click time (not stale closure)
+          const latest = popupDataRef.current[zone.id] || {}
+          const latestD    = latest.d ?? 0
+          const latestNorm = latest.norm ?? 0
+          const latestRgb  = latest.rgb ?? [0, 212, 170]
+          const latestPrev = prevDemand[zone.id] || latestD
+          const latestHist = history[zone.id] || []
+
           const container = document.createElement('div')
-          const popup = L.popup({ maxWidth: 240, className: 'mob-popup' })
+
+          // ✅ Always unmount old root before creating new one
+          if (rootsRef.current[zone.id]) {
+            try { rootsRef.current[zone.id].unmount() } catch {}
+          }
+          rootsRef.current[zone.id] = createRoot(container)
+
+          const popup = L.popup({
+            maxWidth: 200,     // ✅ constrain Leaflet popup width
+            minWidth: 175,
+            className: 'mob-popup',
+            autoPan: true,     // ✅ auto-pan map so popup stays in view
+            autoPanPadding: [20, 20],
+          })
             .setLatLng([zone.lat, zone.lon])
             .setContent(container)
             .openOn(map)
 
-          if (!rootsRef.current[zone.id]) {
-            rootsRef.current[zone.id] = createRoot(container)
-          }
           rootsRef.current[zone.id].render(
-            <ZonePopup zone={zone} demand={d} norm={norm} rgb={rgb}
-              history={history[zone.id] || []}
-              delta={d - (prevDemand[zone.id] || d)} />
+            <ZonePopup
+              zone={zone}
+              demand={latestD}
+              norm={latestNorm}
+              rgb={latestRgb}
+              history={latestHist}
+              delta={latestD - latestPrev}
+            />
           )
         })
 
         circlesRef.current[zone.id] = circle
       } else {
-        circlesRef.current[zone.id].setStyle({
-          radius,
+        // ✅ Update radius too, not just style
+        const circle = circlesRef.current[zone.id]
+        circle.setRadius(radius)
+        circle.setStyle({
           color:       rgbStr(rgb, 0.35),
           fillColor:   col,
           fillOpacity: 0.65,
@@ -110,7 +136,6 @@ export default function MapView() {
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full" />
-      {/* Vignette overlay */}
       <div className="absolute inset-0 pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(8,11,18,.6) 100%)' }} />
     </div>
